@@ -1,0 +1,64 @@
+# Multi-stage build for Spring Boot
+# Uses Maven image which includes both Maven and Gradle support
+FROM maven:3.9.9-eclipse-temurin-17-alpine AS builder
+
+WORKDIR /app
+
+# Copy all project files first
+COPY . .
+
+# Auto-detect build tool and build
+RUN set -ex && \
+    if [ -f "build.gradle" ] || [ -f "build.gradle.kts" ]; then \
+      echo "🔨 Detected Gradle project" && \
+      apk add --no-cache gradle && \
+      if [ -f "./gradlew" ]; then \
+        chmod +x ./gradlew && \
+        ./gradlew build -x test --no-daemon --console=plain; \
+      else \
+        gradle build -x test --no-daemon --console=plain; \
+      fi && \
+      mkdir -p /app/output && \
+      find /app/build/libs -name "*.jar" ! -name "*-plain.jar" -exec cp {} /app/output/app.jar \;; \
+    elif [ -f "pom.xml" ]; then \
+      echo "🔨 Detected Maven project" && \
+      mvn package -DskipTests --no-transfer-progress -B && \
+      mkdir -p /app/output && \
+      find /app/target -name "*.jar" ! -name "*-sources.jar" ! -name "*-javadoc.jar" -exec cp {} /app/output/app.jar \;; \
+    else \
+      echo "❌ ERROR: No build.gradle or pom.xml found!" && \
+      ls -la && \
+      exit 1; \
+    fi
+
+#############################################
+# RUNTIME STAGE (Common for both)
+#############################################
+FROM eclipse-temurin:17-jre-alpine
+
+WORKDIR /app
+
+# Install curl for health checks
+RUN apk add --no-cache curl
+
+# Copy JAR from builder
+COPY --from=builder /app/output/app.jar app.jar
+
+# Create non-root user for security
+RUN addgroup -S spring && adduser -S spring -G spring
+USER spring:spring
+
+# Expose port
+EXPOSE 8080
+
+# Set environment variables
+ENV SPRING_PROFILES_ACTIVE=production
+
+ENV JAVA_OPTS="-Xmx512m -Xms256m"
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=60s --retries=3 \
+  CMD curl -f http://localhost:8080/actuator/health || exit 1
+
+# Run application with JVM options
+ENTRYPOINT exec java $JAVA_OPTS -jar app.jar
