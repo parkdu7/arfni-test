@@ -19,7 +19,7 @@ services:
         context: ./apps/spring-boot
         dockerfile: Dockerfile
       ports:
-        - '8080:8080'
+        - '8085:8085'
   prometheus:
     kind: docker.container
     target: ec2
