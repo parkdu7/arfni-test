@@ -1,0 +1,16 @@
+# ARFNI Stack Configuration
+version: "1.0"
+
+# Project metadata
+metadata:
+  name: arfni-test
+  description: "Auto-generated stack configuration"
+
+# Services configuration
+services: {}
+
+# Network configuration
+networks:
+  default:
+    driver: bridge
+
