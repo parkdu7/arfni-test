@@ -19,4 +19,4 @@ services:
         context: ./apps/spring-boot
         dockerfile: Dockerfile
       ports:
-        - '8085:8085'
+        - '8080:8080'
