@@ -1,10 +1,23 @@
-version: '3.8'
-
+apiVersion: v0.1
+name: arfni-test
+metadata:
+  monitoring:
+    mode: no-monitoring
+targets:
+  ec2:
+    type: ec2.ssh
+    host: k13d201.p.ssafy.io
+    user: ubuntu
+    sshKey: C:\Users\SSAFY\Downloads\K13D201T.pem
+    workdir: /home/ubuntu/cicdtest
 services:
-  spring:
-    build: .
-    container_name: spring_container
-    ports:
-      - "8080:8080"
-    environment:
-      - SPRING_PROFILES_ACTIVE=prod
+  spring-boot:
+    kind: docker.container
+    target: ec2
+    spec:
+      build:
+        context: ./apps/spring-boot
+        dockerfile: Dockerfile
+      ports:
+        - '8085:8085'
+
