@@ -215,10 +215,10 @@ jobs:
             ls -lh "${APP_DIR}/${FINAL_NAME}"
 
             echo "[INFO] Docker compose rebuild..."
-            ${DOCKER_COMPOSE} down
-            ${DOCKER_COMPOSE} build spring
+            ${DOCKER_COMPOSE} -f stack.yaml down
+            ${DOCKER_COMPOSE} -f stack.yaml build spring
             echo "[INFO] Starting spring..."
-            ${DOCKER_COMPOSE} up -d spring
+            ${DOCKER_COMPOSE} -f stack.yaml up -d spring
 
             echo "[INFO] Running containers:"
             sudo docker ps --format "table {{`{{.Names}}`}}\t{{`{{.Image}}`}}\t{{`{{.Status}}`}}"
