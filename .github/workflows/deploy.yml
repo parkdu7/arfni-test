@@ -14,6 +14,7 @@ env:
   JAVA_VERSION: "17"
   JAVA_DIST: "temurin"
   DEPLOY_ROOT: "/home/ubuntu/cicdtest"
+  REPO_NAME: "${{ github.event.repository.name }}"
 
 jobs:
   build_and_deploy:
@@ -166,7 +167,7 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             set -euo pipefail
-            mkdir -p "${{ env.DEPLOY_ROOT }}/apps/backups"
+            mkdir -p "${{ env.DEPLOY_ROOT }}/${{ env.REPO_NAME }}/apps/backups"
 
       - name: Copy to EC2
         uses: appleboy/scp-action@v0.1.7
@@ -175,7 +176,7 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           source: ${{ steps.detect_project.outputs.PROJECT_DIR }}/build/upload/app.new.jar
-          target: ${{ env.DEPLOY_ROOT }}/apps/
+          target: ${{ env.DEPLOY_ROOT }}/${{ env.REPO_NAME }}/apps/
           overwrite: true
           strip_components: 5
 
@@ -187,9 +188,10 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             set -euo pipefail
-            cd "${{ env.DEPLOY_ROOT }}"
-            APP_DIR="${{ env.DEPLOY_ROOT }}/apps"
-            BACKUP_DIR="${{ env.DEPLOY_ROOT }}/apps/backups"
+            REPO_DIR="${{ env.DEPLOY_ROOT }}/${{ env.REPO_NAME }}"
+            cd "${REPO_DIR}"
+            APP_DIR="${REPO_DIR}/apps"
+            BACKUP_DIR="${REPO_DIR}/apps/backups"
             UPLOAD_NAME="app.new.jar"
             FINAL_NAME="app.jar"
             DOCKER_COMPOSE="sudo docker compose"
